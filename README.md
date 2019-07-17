@@ -5,7 +5,7 @@ A Command Line driven application which store personal journal log with user man
 Python 3.7.0 version of python and Command Line 
 
 ## Getting Started
-Extract the ZIP (JOURNAL_APP_ZIPPED).
+Extract the ZIP (JOURNALAPP).
 In windows you can start running the application by Opening JournalApp.exe.
 
 If you are a Linux or MAC OS X User, Go to the src folder of the extracted zip and execute 
