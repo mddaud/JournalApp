@@ -4,24 +4,62 @@ import getpass
 from datetime import date
 from datetime import datetime
 from cryptography.fernet import Fernet
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+
 parser = argparse.ArgumentParser(prog = 'Journal_App', description = 'Perosnal Journal Management');
+
 
 def readJournalOrCreateJournal(isRead, globalUser):
 	if(isRead == "1"):
 		readJornal(globalUser)
 		print("Wish to Continue ? ")
-		inp = input("Hit 1 to Read OR 2 for New Record OR E for EXIT: ")
+		inp = input("Hit 1 to Read OR 2 for New Record OR 3 to Upload OR E for EXIT: ")
 		readJournalOrCreateJournal(inp, globalUser)
 	elif(isRead == "2"):
 		newJournal(globalUser)
 		print("Wish to Continue ? ")
-		inp = input("Hit 1 to Read OR 2 for New Record: ")
+		inp = input("Hit 1 to Read OR 2 for New Record OR 3 to Upload: ")
+		readJournalOrCreateJournal(inp, globalUser)
+	elif(isRead == "3"):
+		uploadFilesToGoogleDrive(globalUser)
+		print("Wish to Continue ? ")
+		inp = input("Hit 1 to Read OR 2 for New Record OR 3 to Upload: ")
 		readJournalOrCreateJournal(inp, globalUser)
 	elif(isRead == "E"):
 		return
 	else:
 		inp = input("Wrong Input , Hit Again: ")
 		readJournalOrCreateJournal(inp, globalUser)
+
+def uploadFilesToGoogleDrive(globalUser):
+	g_login = GoogleAuth()
+	g_login.LocalWebserverAuth()
+	drive = GoogleDrive(g_login)
+	dirPath = globalUser + "_Notes"
+	if(os.path.isdir(dirPath) == False):
+		print("******   You Have Zero Journal   ******")
+	else:
+		file = open('key.key', 'rb')
+		key = file.read()
+		file.close()
+		listOfFiles = os.listdir(dirPath)
+		sortedListOfFiles = sorted(listOfFiles, key = int)
+		count = 1
+		print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+		for fileX in sortedListOfFiles:
+			print('\n' + "#Journal " + str(count) + '\n')
+			filePath = dirPath + "/" + fileX
+			ff = open(filePath, 'rb')
+			fK = Fernet(key)
+			ff_drive = drive.CreateFile({'title':os.path.basename('fn')})
+			for line in ff:
+				#print(fK.decrypt(line).decode())
+				ff_drive.SetContentString(fK.decrypt(line).decode())
+			#ff_drive.SetContentString(fK.decrypt(ff).decode().read())
+			ff_drive.Upload()
+			ff.close()
+			print("***    Upload Complete   ***")
 
 def readJornal(globalUser):
 	dirPath = globalUser + "_Notes"
@@ -143,7 +181,7 @@ def loginOrSignUp(isExist):
 		userName = input("Username: ")
 		password = getpass.getpass()
 		while isValidCredentials(userName, password) == 0:
-			wantToExit = input("HIT E For ExitOR Any Key To Continue: ")
+			wantToExit = input("HIT E For Exit OR Any Key To Continue: ")
 			if(wantToExit == "E"):
 				loginOrSignUp("E")
 				return ["0"]
@@ -177,8 +215,7 @@ isExist = input("Hit: ")
 if (isExist != "E"):
 	toBeExited = loginOrSignUp(isExist)
 	if(toBeExited[0] == "1"):
-		print("Hit 1 for Read OR 2 for New Record")
+		print("Hit 1 for Read OR 2 for New Record OR 3 to Upload")
 		print("Hit E for Exit")
 		isRead = input("Hit: ")
 		readJournalOrCreateJournal(isRead, toBeExited[1])
-
